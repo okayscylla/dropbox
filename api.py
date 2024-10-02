@@ -1,7 +1,9 @@
 import dropbox
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
+logging.getLogger('requests').setLevel(logging.DEBUG)
+logging.getLogger('dropbox').disabled = True
 
 
 with open("secrets.txt", "r") as f:
@@ -11,17 +13,26 @@ with open("secrets.txt", "r") as f:
 class DropboxClient:
     def __init__(self,access_token):
         self.access_token = access_token
+        
+        self.initialised = False
+        self.connected = False
+        self.authenticated = False
+
         try:
             self.instance = dropbox.Dropbox(self.access_token)
             logging.info(f"Connected to Dropbox with access token {self.access_token}!")
+            self.initialised = True
+            self.connected = True
         except dropbox.exceptions.AuthError:
             logging.error("Error connecting to Dropbox with access token: " + self.access_token)
+            self.initialised = True
         except:
             raise
         
         try:
             self.account = self.instance.users_get_current_account()
             logging.info(f"Connected to Dropbox with account {self.account.name.display_name}")
+            self.authenticated = True
         except dropbox.exceptions.AuthError:
             logging.error("Failed to get current account")
         except:
@@ -48,3 +59,6 @@ class DropboxClient:
 
 if __name__ == "__main__":
     client = DropboxClient(ACCESS_TOKEN)
+
+    for entry in client.explore(""):
+        print(entry.name)
