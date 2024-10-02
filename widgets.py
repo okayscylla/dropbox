@@ -4,6 +4,16 @@ import logging
 import os
 
 
+class PopupWindow(customtkinter.CTk):
+    def __init__(self, title, resolution=(430, 180), scale=1.0, *args, **kwargs): # TODO implement icons
+        super().__init__(*args, **kwargs)
+        
+        self.title(title)
+        self.scale = scale
+        self.geometry(f"{int(resolution[0]*scale)}x{int(resolution[1]*scale)}")
+        self.resizable(False, False)
+
+
 class BrowseFrame(customtkinter.CTkScrollableFrame):
     def __init__(self, master, handle, scale=1.0, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
