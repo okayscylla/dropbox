@@ -1,4 +1,4 @@
-# Welcome to SimpleBackups!
+# Welcome to DBackup!
 
 TODO description
 
