@@ -5,9 +5,7 @@ import os
 
 
 class PopupWindow(ctk.CTk):
-    def __init__(
-        self, title, resolution=(430, 180), scale=1.0, *args, **kwargs
-    ):  # TODO implement icons
+    def __init__(self, title, resolution=(430, 180), scale=1.0, *args, **kwargs):  # TODO implement icons
         super().__init__(*args, **kwargs)
 
         self.title(title)
@@ -16,12 +14,22 @@ class PopupWindow(ctk.CTk):
         self.resizable(False, False)
 
 
+class EntryField(ctk.CTkFrame):
+    def __init__(self, master, text, font, *args, **kwargs):
+        super().__init__(master, *args, **kwargs)
+        self.font = font
+        self.description = ctk.CTkLabel(self, text=text, font=self.font)
+        self.entry = ctk.CTkEntry(self, font=self.font)
+        self.description.pack(side="left")
+        self.entry.pack(side="right", fill="x", expand=True)
+
+
 class ButtonRow(ctk.CTkFrame):
     def __init__(self, master, text, submit_text="Select", style=None, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
         
-        self.next_button = customtkinter.CTkButton(self, text=text)
-        self.subcmd_button = customtkinter.CTkButton(self, text=submit_text)
+        self.next_button = ctk.CTkButton(self, text=text)
+        self.subcmd_button = ctk.CTkButton(self, text=submit_text)
         self.next_button.pack(side="left", fill="x", expand=True)
         self.subcmd_button.pack(side="right")
 
@@ -29,14 +37,11 @@ class ButtonRow(ctk.CTkFrame):
 class BrowseFrame(ctk.CTkScrollableFrame):
     def __init__(self, master, handle, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
-
-        self.master = master
         self.handle = handle
+        
+        self.master = master
         self.widgets = []
-        self.directory = None
-
-        if self.startup_test() is not True:
-            raise Exception("There was an error with the handle")
+        self.directory = str()
 
         self.seek(str(), absolute=True)
 
@@ -58,6 +63,10 @@ class BrowseFrame(ctk.CTkScrollableFrame):
     
     def add(self, display_name, destination):
         self.widgets.append(ButtonRow(self, display_name))
+    
+    def fill_widgets(self):
+        for item in self.handle.explore(self.directory):
+            self.add(item.name, item.path)
 
     def refresh(self):
         logging.info(f"Refreshing directory {self.directory.__repr__()}")
@@ -81,9 +90,7 @@ if __name__ == "__main__":
 
     handle = dbx.DropboxClient(os.getenv("DBX_KEY"))
 
-    frame = BrowseFrame(root, handle)
-    frame.add("Test", "/test")
-    frame.refresh()
+    frame = EntryField(root, "Test")
     frame.pack(expand=True, fill="both")
 
     root.mainloop()
