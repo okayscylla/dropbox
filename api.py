@@ -90,7 +90,7 @@ if __name__ == "__main__":
     # handle = ApiHandle()
     # print(handle.get_auth_url())
     # print(handle.finish_auth(input("Paste auth code: ")))
-    # print(os.getenv("DBX_KEY"))
+    print(os.getenv("DBX_KEY"))
     client = DropboxClient(os.getenv("DBX_KEY"))
 
     for entry in client.explore(""):

@@ -1,10 +1,10 @@
-import customtkinter
+import customtkinter as ctk
 import api as dbx
 import logging
 import os
 
 
-class PopupWindow(customtkinter.CTk):
+class PopupWindow(ctk.CTk):
     def __init__(
         self, title, resolution=(430, 180), scale=1.0, *args, **kwargs
     ):  # TODO implement icons
@@ -16,36 +16,29 @@ class PopupWindow(customtkinter.CTk):
         self.resizable(False, False)
 
 
-class BrowseFrame(customtkinter.CTkScrollableFrame):
-    def __init__(self, master, handle, scale=1.0, *args, **kwargs):
+class ButtonRow(ctk.CTkFrame):
+    def __init__(self, master, text, submit_text="Select", style=None, *args, **kwargs):
+        super().__init__(master, *args, **kwargs)
+        
+        self.next_button = customtkinter.CTkButton(self, text=text)
+        self.subcmd_button = customtkinter.CTkButton(self, text=submit_text)
+        self.next_button.pack(side="left", fill="x", expand=True)
+        self.subcmd_button.pack(side="right")
+
+
+class BrowseFrame(ctk.CTkScrollableFrame):
+    def __init__(self, master, handle, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
 
         self.master = master
         self.handle = handle
-        self.scale = scale
+        self.widgets = []
         self.directory = None
 
         if self.startup_test() is not True:
             raise Exception("There was an error with the handle")
 
         self.seek(str(), absolute=True)
-        self.refresh()
-
-    def startup_test(self):
-        if not self.handle.initialised:
-            logging.error("Handle not initialised")
-            return 0  # Handle not initialised
-        elif not self.handle.connected:
-            logging.error("Handle not connected")
-            return -1  # Handle not connected
-        elif not self.handle.authenticated:
-            logging.error("Handle not authenticated")
-            return -2  # Handle not authenticated
-
-        logging.info(
-            f"Startup test passed: initialised: {self.handle.initialised}, connected: {self.handle.connected}, authenticated: {self.handle.authenticated}"
-        )
-        return True
 
     def seek(self, path, absolute=False):
         logging.info(f"Leaving directory {self.directory.__repr__()}")
@@ -62,20 +55,35 @@ class BrowseFrame(customtkinter.CTkScrollableFrame):
             self.directory = os.path.join(self.directory, path)
 
         return True
+    
+    def add(self, display_name, destination):
+        self.widgets.append(ButtonRow(self, display_name))
 
     def refresh(self):
-        pass
+        logging.info(f"Refreshing directory {self.directory.__repr__()}")
+        for widget in self.widgets:
+            widget.pack_forget()
+            widget.pack(side="top", fill="x", expand=True)
+        
+        logging.info(f"Refreshed directory {self.directory.__repr__()}")
 
 
 if __name__ == "__main__":
-    root = customtkinter.CTk()
+    import dotenv
+    import os
+    
+    dotenv.load_dotenv()
+    
+    root = ctk.CTk()
     root.title("Test")
     root.geometry("1200x740")
     root.resizable(False, False)
 
-    handle = dbx.DropboxClient(dbx.ACCESS_TOKEN)
+    handle = dbx.DropboxClient(os.getenv("DBX_KEY"))
 
     frame = BrowseFrame(root, handle)
+    frame.add("Test", "/test")
+    frame.refresh()
     frame.pack(expand=True, fill="both")
 
     root.mainloop()
