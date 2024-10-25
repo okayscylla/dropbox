@@ -99,7 +99,7 @@ class DropboxClient:
     def download(self, file, destination):
         try:
             # for 
-            self.instance.files_download_to_file(file, destination)
+            self.instance.files_download_to_file(destination, file)
         except dropbox.exceptions.ApiError as e:
             if e.error.is_path() and e.error.get_path().is_not_found():
                 print(f"File {file} not found")
