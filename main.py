@@ -1,6 +1,7 @@
 import widgets
 import customtkinter as ctk
 import api
+import duplicates
 import logging
 import dotenv
 import os
@@ -17,8 +18,9 @@ class MainWindow(ctk.CTk):
         self.resizable(False, False)
         self.geometry("1200x740")
         logging.info("Main window initialized")
-        self.tab_init()
         self.scopes = []
+        self.tab_init()
+        
     
     def reload_vars(self):
         self.days_since_last_backup = "20"
@@ -31,8 +33,6 @@ class MainWindow(ctk.CTk):
         self.tabs._segmented_button.configure(font=ctk.CTkFont(size=18))
         self.tabs.pack(expand=True, fill="both")
         
-        self.overview_widgets = []
-        self.settings_widgets = []
         self.api_init()
         self.init_backup()
     
@@ -40,37 +40,24 @@ class MainWindow(ctk.CTk):
         self.reload_vars()
         root = self.tabs.tab("Overview")
         
-        title = ctk.CTkLabel(root, text="DBackup", font=ctk.CTkFont(size=30))
-        title.pack(anchor="nw", padx=(15, 0), pady=(10, 0))
+        self.title = ctk.CTkLabel(root, text="DBackup", font=ctk.CTkFont(size=30))
+        self.title.pack(anchor="nw", padx=(15, 0), pady=(10, 0))
         
-        self.overview_widgets.append(title)
+        self.browse = widgets.BrowseFrame(root, self.handle, self)
+        self.browse.refresh()
+        self.browse.pack(expand=True, fill="both")
         
-        # sep1 = ttk.Separator(root, orient="vertical")
-        # sep1.pack(anchor="nw", padx=15, pady=(0, 10), expand=True, fill="x")
+        # last = ctk.CTkLabel(root, text=f"Last Backup:\t{self.days_since_last_backup} days ago", font=ctk.CTkFont(size=20))
+        # last.pack(anchor="nw", padx=(15, 0))
+        self.status = ctk.CTkLabel(root, text="Current Status: \tNone", font=ctk.CTkFont(size=20))
+        self.status.pack(anchor="nw", padx=(15, 0))
         
-        # self.overview_widgets.append(sep1)
-        
-        # scopes = ctk.CTkScrollableFrame(root)
-        # for item in self.scopes:
-        #     ctk.CTkLabel(scopes, text=item).pack(anchor="nw")
-        # scopes.pack(fill="both", expand=True)
-        
-        browse = widgets.BrowseFrame(root, self.handle, self)
-        browse.refresh()
-        browse.pack(expand=True, fill="both")
-        
-        self.overview_widgets.append(browse)
-        
-        last = ctk.CTkLabel(root, text=f"Last Backup:\t{self.days_since_last_backup} days ago", font=ctk.CTkFont(size=20))
-        last.pack(anchor="nw", padx=(15, 0))
-        
-        self.overview_widgets.append(last)
-        
-        file_types = widgets.EntryField(root, "File Types:\t", ctk.CTkFont(size=20))
-        file_types.pack(anchor="nw", padx=(15, 0), pady=10)
-        
-        self.overview_widgets.append(file_types)
-    
+        self.location = widgets.EntryField(root, "Save Location:\t", ctk.CTkFont(size=20))
+        self.location.pack(anchor="nw", padx=(15, 0), pady=10, side="left")
+                
+        self.submit = ctk.CTkButton(root, text="Submit", font=ctk.CTkFont(size=20), command=lambda: self.begin_backup())
+        self.submit.pack(anchor="se", padx=(0, 15), pady=10, side="right")
+            
     def api_init(self):
         self.handle = api.DropboxClient(self.api_key)
         self.startup_test()
@@ -90,6 +77,30 @@ class MainWindow(ctk.CTk):
             f"Startup test passed: initialised: {self.handle.initialised}, connected: {self.handle.connected}, authenticated: {self.handle.authenticated}"
         )
         return True
+    
+    def begin_backup(self):
+        save_dir = self.location.entry.get()
+        if save_dir == "":
+            return
+        
+        for folder in self.scopes:
+            dirs, paths = self.handle.get_directories(folder)
+            
+            for dir in dirs:
+                if not os.path.exists(os.path.join(save_dir, dir)):
+                    os.mkdir(os.path.join(save_dir, dir))
+            
+            for path in paths:
+                if not os.path.exists(os.path.join(save_dir, path)):
+                    self.handle.download(path, os.path.join(save_dir, path))
+        
+        duplicates_files = duplicates.duplicate_finder(self.scopes)
+        
+        for duplicate in duplicates_files:
+            try:
+                os.remove(duplicate)
+            except OSError:
+                pass
 
 if __name__ == "__main__":
     dotenv.load_dotenv()

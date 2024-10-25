@@ -51,20 +51,27 @@ class ButtonRow(ctk.CTkFrame):
             self.master.directory = os.path.join(self.master.directory, self.text)
         self.master.refresh()
     
-    def submit(self):
-        if self.text == "..":
-            if self.master.directory == "":
-                self.master.parent.scopes.append(str())
-            else:
-                return
+    def format_path(self, path):
+        if (path == ".." and self.master.directory == "") or (self.master.directory == "/"):
+            return str()
+        elif path == "..":
+            return
         elif self.master.directory == str():
-            self.master.parent.scopes.append(f"/{os.path.join(self.master.directory, self.text)}") # TODO plolly can remove this
-        elif self.master.directory == "/":
-            self.master.parent.scopes.append(str())
+            return f"/{path}"
         else:
-            self.master.parent.scopes.append(os.path.join(self.master.directory, self.text))
+            return os.path.join(self.master.directory, path)
+    
+    def submit(self): # TODO simplify
+        formatted_path = self.format_path(self.text)
         
-        print(self.master.parent.scopes)
+        if (formatted_path not in self.master.parent.scopes): # TODO ugly fix and simplify
+            if  (formatted_path is not None):
+                self.master.parent.scopes.append(formatted_path)
+                print(self.master.parent.scopes)
+        
+        self.master.refresh()
+        
+        return
 
 
 class BrowseFrame(ctk.CTkScrollableFrame):
@@ -96,7 +103,11 @@ class BrowseFrame(ctk.CTkScrollableFrame):
         return True
     
     def add(self, display_name, destination):
-        self.widgets.append(ButtonRow(self, display_name))
+        scopes = self.parent.scopes
+        widget = ButtonRow(self, display_name)
+        if widget.format_path(widget.text) in scopes:
+            widget.subcmd_button.configure(state="disabled")
+        self.widgets.append(widget)
     
     def fill_widgets(self):
         for item in self.handle.explore(self.directory):

@@ -94,7 +94,7 @@ class DropboxClient:
             else:
                 self.full_paths.append(item.path_lower)
         
-        return self.tree
+        return self.tree, self.full_paths
 
     def download(self, file, destination):
         try:
