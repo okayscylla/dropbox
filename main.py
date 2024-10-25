@@ -18,6 +18,7 @@ class MainWindow(ctk.CTk):
         self.geometry("1200x740")
         logging.info("Main window initialized")
         self.tab_init()
+        self.scopes = []
     
     def reload_vars(self):
         self.days_since_last_backup = "20"
@@ -54,7 +55,7 @@ class MainWindow(ctk.CTk):
         #     ctk.CTkLabel(scopes, text=item).pack(anchor="nw")
         # scopes.pack(fill="both", expand=True)
         
-        browse = widgets.BrowseFrame(root, self.handle)
+        browse = widgets.BrowseFrame(root, self.handle, self)
         browse.refresh()
         browse.pack(expand=True, fill="both")
         

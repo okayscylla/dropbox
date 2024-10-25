@@ -52,20 +52,26 @@ class ButtonRow(ctk.CTkFrame):
         self.master.refresh()
     
     def submit(self):
-        pass
-        # if self.master.directory == str() & self.master.directory[0] != "/":
-        #     self.master.directory = f"/{os.path.join(self.master.directory, self.text)}"
-        # elif self.master.directory == "/":
-        #     self.master.directory = str()
-        # else:
-        #     self.master.directory = os.path.join(self.master.directory, self.text)
+        if self.text == "..":
+            if self.master.directory == "":
+                self.master.parent.scopes.append(str())
+            else:
+                return
+        elif self.master.directory == str():
+            self.master.parent.scopes.append(f"/{os.path.join(self.master.directory, self.text)}") # TODO plolly can remove this
+        elif self.master.directory == "/":
+            self.master.parent.scopes.append(str())
+        else:
+            self.master.parent.scopes.append(os.path.join(self.master.directory, self.text))
+        
+        print(self.master.parent.scopes)
 
 
 class BrowseFrame(ctk.CTkScrollableFrame):
-    def __init__(self, master, handle, *args, **kwargs):
+    def __init__(self, master, handle, parent, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
         self.handle = handle
-        
+        self.parent = parent
         self.master = master
         self.widgets = []
         self.paths = []

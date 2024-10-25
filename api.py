@@ -3,6 +3,7 @@ import logging
 import requests
 from dotenv import load_dotenv
 import os
+from collections import defaultdict
 
 load_dotenv()
 
@@ -38,7 +39,6 @@ class ApiHandle:
 class DropboxClient:
     def __init__(self, access_token):
         self.access_token = access_token
-
         self.initialised = False
         self.connected = False
         self.authenticated = False
@@ -67,11 +67,14 @@ class DropboxClient:
         except:
             raise
 
-    def explore(self, path):
+    def explore(self, path, folders_only=True):
         folders = []
         try:
             for entry in self.instance.files_list_folder(path).entries:
-                if isinstance(entry, dropbox.files.FolderMetadata):
+                if folders_only:
+                    if isinstance(entry, dropbox.files.FolderMetadata):
+                        folders.append(entry)
+                else:
                     folders.append(entry)
             return folders
         except dropbox.exceptions.ApiError as e:
@@ -79,9 +82,23 @@ class DropboxClient:
                 logging.error(f"Folder {path} not found")
             else:
                 raise
+    
+    def get_directories(self, path):
+        self.tree = {}
+        self.full_paths = []
+        base = self.explore(path, folders_only=False)
+        
+        for item in base:
+            if isinstance(item, dropbox.files.FolderMetadata):
+                self.tree[item.name] = self.get_directories(item.path_display)
+            else:
+                self.full_paths.append(item.path_lower)
+        
+        return self.tree
 
     def download(self, file, destination):
         try:
+            # for 
             self.instance.files_download_to_file(file, destination)
         except dropbox.exceptions.ApiError as e:
             if e.error.is_path() and e.error.get_path().is_not_found():
@@ -96,6 +113,4 @@ if __name__ == "__main__":
     # print(handle.finish_auth(input("Paste auth code: ")))
     # print(os.getenv("DBX_KEY"))
     client = DropboxClient(os.getenv("DBX_KEY"))
-
-    for entry in client.explore("/"):
-        print(entry.name)
+    print(client.get_directories(""))
