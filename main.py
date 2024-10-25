@@ -1,5 +1,4 @@
 import widgets
-from tkinter import ttk
 import customtkinter as ctk
 import api
 import logging
@@ -56,7 +55,7 @@ class MainWindow(ctk.CTk):
         # scopes.pack(fill="both", expand=True)
         
         browse = widgets.BrowseFrame(root, self.handle)
-        browse.fill_widgets()
+        browse.refresh()
         browse.pack(expand=True, fill="both")
         
         self.overview_widgets.append(browse)

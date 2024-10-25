@@ -29,7 +29,7 @@ class ApiHandle:
     def finish_auth(self, auth_code):
         response = requests.post(f"https://{self.url}/api/get-access-token", json={"auth_code": auth_code})
         try:
-            data = response.json()["access_token"]
+            data = response.json()[0]["access_token"]
         except AttributeError:
             raise InvalidResponseError("Invalid response from server. Please try again.")
         return data
@@ -68,8 +68,12 @@ class DropboxClient:
             raise
 
     def explore(self, path):
+        folders = []
         try:
-            return self.instance.files_list_folder(path).entries
+            for entry in self.instance.files_list_folder(path).entries:
+                if isinstance(entry, dropbox.files.FolderMetadata):
+                    folders.append(entry)
+            return folders
         except dropbox.exceptions.ApiError as e:
             if e.error.is_path() and e.error.get_path().is_not_found():
                 logging.error(f"Folder {path} not found")
@@ -87,11 +91,11 @@ class DropboxClient:
 
 
 if __name__ == "__main__":
-    # handle = ApiHandle()
+    handle = ApiHandle()
     # print(handle.get_auth_url())
     # print(handle.finish_auth(input("Paste auth code: ")))
-    print(os.getenv("DBX_KEY"))
+    # print(os.getenv("DBX_KEY"))
     client = DropboxClient(os.getenv("DBX_KEY"))
 
-    for entry in client.explore(""):
+    for entry in client.explore("/"):
         print(entry.name)

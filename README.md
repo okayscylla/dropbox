@@ -24,3 +24,10 @@ Coming soon!
 # Frequently Asked Questions (FAQs)
 
 Coming soon!
+
+# Credits
+
+-tfeldmann (Github username) for duplicate algorithm and code
+-sanorita's original StackOverflow duplicate thread
+-ChatGPT + Codeium for helping me fix bugs (!!) and write code
+-and many many more!
